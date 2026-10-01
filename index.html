@@ -1572,6 +1572,15 @@ function storageKey(grade, stream, term, year) {
   return `school_scores_${grade}_${stream||"none"}_${term.replace(/\s+/g,"_")}_${year}`;
 }
 function learnersKey(grade, stream) { return `school_learners_${grade}_${stream||"none"}`; }
+
+// ── Fees module: storage keys + helpers ─────────────────────────────────
+const FEE_TERMS = ["Term 1","Term 2","Term 3"];
+function feesStructureKey(year) { return `fees_structure_${year}`; }
+function feesPaymentsKey(grade, stream, year) { return `fees_payments_${grade}_${stream||"none"}_${year}`; }
+function sumPayments(payments, term) {
+  return (payments||[]).filter(p=>!term||p.term===term).reduce((a,p)=>a+(Number(p.amount)||0),0);
+}
+function fmtKES(n) { return "KES " + (Number(n)||0).toLocaleString(); }
 function commentKey(grade, scope, term, year) {
   return `school_comment_${grade}_${scope||"none"}_${term.replace(/\s+/g,"_")}_${year}`;
 }
@@ -1987,7 +1996,7 @@ function PrintableClassList({ learners, grade, stream, term, year, classTeacher,
 function TrendChart({ data, maxPoints }) {
   const usable = (data||[]).filter(d => d.avg!=null || d.points!=null);
   if (usable.length < 2) return null;
-  const W = 660, H = 178, padL = 30, padR = 14, padT = 16, padB = 36;
+  const W = 660, H = 138, padL = 28, padR = 12, padT = 12, padB = 30;
   const innerW = W-padL-padR, innerH = H-padT-padB;
   const n = data.length;
   const xAt = i => n>1 ? padL+(innerW*i)/(n-1) : padL+innerW/2;
@@ -2006,31 +2015,31 @@ function TrendChart({ data, maxPoints }) {
   const gridLines = [0,25,50,75,100];
   return (
     <div>
-      <div style={{display:"flex",gap:14,alignItems:"center",fontSize:8.5,color:"#333",marginBottom:3}}>
-        <span style={{display:"flex",alignItems:"center",gap:4}}><span style={{width:14,height:0,borderTop:"2.4px solid #111",display:"inline-block"}}></span>Marks Average (%)</span>
-        <span style={{display:"flex",alignItems:"center",gap:4}}><span style={{width:14,height:0,borderTop:"2.4px dashed #b8860b",display:"inline-block"}}></span>Total Points (label = actual points / {maxPoints})</span>
+      <div style={{display:"flex",gap:12,alignItems:"center",fontSize:7.5,color:"#333",marginBottom:2}}>
+        <span style={{display:"flex",alignItems:"center",gap:3}}><span style={{width:12,height:0,borderTop:"2px solid #111",display:"inline-block"}}></span>Marks Average (%)</span>
+        <span style={{display:"flex",alignItems:"center",gap:3}}><span style={{width:12,height:0,borderTop:"2px dashed #b8860b",display:"inline-block"}}></span>Total Points (label = actual points / {maxPoints})</span>
       </div>
       <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{display:"block",background:"#fff"}}>
         {gridLines.map(g=>(
           <g key={g}>
             <line x1={padL} y1={yAt(g)} x2={W-padR} y2={yAt(g)} stroke="#e2e2e2" strokeWidth="1" />
-            <text x={padL-4} y={yAt(g)+2.5} fontSize="7" textAnchor="end" fill="#666">{g}</text>
+            <text x={padL-4} y={yAt(g)+2} fontSize="6" textAnchor="end" fill="#666">{g}</text>
           </g>
         ))}
         <line x1={padL} y1={padT} x2={padL} y2={H-padB} stroke="#000" strokeWidth="1" />
         <line x1={padL} y1={H-padB} x2={W-padR} y2={H-padB} stroke="#000" strokeWidth="1" />
-        <path d={pathOf(pointsPct)} fill="none" stroke="#b8860b" strokeWidth="2" strokeDasharray="4 3" />
-        <path d={pathOf(marks)} fill="none" stroke="#111" strokeWidth="2.2" />
+        <path d={pathOf(pointsPct)} fill="none" stroke="#b8860b" strokeWidth="1.6" strokeDasharray="4 3" />
+        <path d={pathOf(marks)} fill="none" stroke="#111" strokeWidth="1.8" />
         {data.map((d,i)=>{
           const mx = xAt(i);
           return (
             <g key={i}>
-              {marks[i]!=null && <circle cx={mx} cy={yAt(marks[i])} r="3" fill="#111" />}
-              {marks[i]!=null && <text x={mx} y={yAt(marks[i])-6} fontSize="7.5" textAnchor="middle" fontWeight="700" fill="#111">{marks[i].toFixed(0)}%</text>}
-              {pointsPct[i]!=null && <rect x={mx-2.5} y={yAt(pointsPct[i])-2.5} width="5" height="5" fill="#b8860b" />}
-              {pointsPct[i]!=null && <text x={mx} y={yAt(pointsPct[i])+13} fontSize="7.5" textAnchor="middle" fontWeight="700" fill="#8a6508">{d.points}pt</text>}
-              <text x={mx} y={H-padB+11} fontSize="7.5" textAnchor="middle" fill="#222" fontWeight={d.current?"800":"400"}>{d.label}</text>
-              {d.level && d.level!=="–" && <text x={mx} y={H-padB+20} fontSize="6.5" textAnchor="middle" fill="#666">{d.level}</text>}
+              {marks[i]!=null && <circle cx={mx} cy={yAt(marks[i])} r="2.4" fill="#111" />}
+              {marks[i]!=null && <text x={mx} y={yAt(marks[i])-5} fontSize="6.5" textAnchor="middle" fontWeight="700" fill="#111">{marks[i].toFixed(0)}%</text>}
+              {pointsPct[i]!=null && <rect x={mx-2} y={yAt(pointsPct[i])-2} width="4" height="4" fill="#b8860b" />}
+              {pointsPct[i]!=null && <text x={mx} y={yAt(pointsPct[i])+11} fontSize="6.5" textAnchor="middle" fontWeight="700" fill="#8a6508">{d.points}pt</text>}
+              <text x={mx} y={H-padB+10} fontSize="6.5" textAnchor="middle" fill="#222" fontWeight={d.current?"800":"400"}>{d.label}</text>
+              {d.level && d.level!=="–" && <text x={mx} y={H-padB+18} fontSize="5.8" textAnchor="middle" fill="#666">{d.level}</text>}
             </g>
           );
         })}
@@ -2424,6 +2433,356 @@ function HistoryModal({ grade, stream, onClose }) {
 }
 
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
+function FeesPage({ initialGrade, initialStream, initialYear, classesConfig, schoolName, schoolCounty, onBack }) {
+  const [feeGrade, setFeeGrade]   = useState(initialGrade);
+  const [feeStream, setFeeStream] = useState(initialStream || "");
+  const [feeYear, setFeeYear]     = useState(initialYear);
+  const [learners, setLearners]   = useState([]);
+  const [structure, setStructure] = useState({});
+  const [payments, setPayments]   = useState({});
+  const [loading, setLoading]     = useState(true);
+  const [saving, setSaving]       = useState(false);
+  const [savedFlash, setSavedFlash] = useState("");
+
+  const [structDraft, setStructDraft] = useState({ "Term 1":"", "Term 2":"", "Term 3":"" });
+  const [paymentFor, setPaymentFor]   = useState(null); // learner object
+  const [historyFor, setHistoryFor]   = useState(null); // learner object
+
+  const streamOpts = classesConfig[feeGrade] || [""];
+  const gradeLabel = `Grade ${feeGrade}`;
+
+  async function refresh() {
+    setLoading(true);
+    try {
+      const [lrns, st, pay] = await Promise.all([
+        loadShared(learnersKey(feeGrade, feeStream), []),
+        loadShared(feesStructureKey(feeYear), {}),
+        loadShared(feesPaymentsKey(feeGrade, feeStream, feeYear), {})
+      ]);
+      setLearners(lrns || []);
+      setStructure(st || {});
+      setPayments(pay || {});
+      const g = (st || {})[feeGrade] || {};
+      setStructDraft({ "Term 1": g["Term 1"] ?? "", "Term 2": g["Term 2"] ?? "", "Term 3": g["Term 3"] ?? "" });
+    } finally {
+      setLoading(false);
+    }
+  }
+  useEffect(()=>{ refresh(); }, [feeGrade, feeStream, feeYear]);
+
+  function flash(msg) { setSavedFlash(msg); setTimeout(()=>setSavedFlash(""), 2500); }
+
+  async function saveStructure() {
+    setSaving(true);
+    try {
+      const clean = {
+        "Term 1": Number(structDraft["Term 1"])||0,
+        "Term 2": Number(structDraft["Term 2"])||0,
+        "Term 3": Number(structDraft["Term 3"])||0
+      };
+      const updated = { ...structure, [feeGrade]: clean };
+      const ok = await saveShared(feesStructureKey(feeYear), updated);
+      if (ok) { setStructure(updated); flash("✅ Fee structure saved"); }
+      else alert("Save failed. Check your internet connection and try again.");
+    } finally { setSaving(false); }
+  }
+
+  async function addPayment(learnerName, payment) {
+    setSaving(true);
+    try {
+      const updated = { ...payments, [learnerName]: [...(payments[learnerName]||[]), payment] };
+      const ok = await saveShared(feesPaymentsKey(feeGrade, feeStream, feeYear), updated);
+      if (ok) { setPayments(updated); flash("✅ Payment recorded"); return true; }
+      alert("Save failed. Check your internet connection and try again.");
+      return false;
+    } finally { setSaving(false); }
+  }
+
+  async function deletePayment(learnerName, paymentId) {
+    if (!confirm("Delete this payment record? This cannot be undone.")) return;
+    setSaving(true);
+    try {
+      const updated = { ...payments, [learnerName]: (payments[learnerName]||[]).filter(p=>p.id!==paymentId) };
+      const ok = await saveShared(feesPaymentsKey(feeGrade, feeStream, feeYear), updated);
+      if (ok) { setPayments(updated); flash("🗑 Payment deleted"); }
+      else alert("Delete failed. Check your internet connection and try again.");
+    } finally { setSaving(false); }
+  }
+
+  function rowFor(l) {
+    const p = payments[l.name] || [];
+    const t1 = sumPayments(p, "Term 1"), t2 = sumPayments(p, "Term 2"), t3 = sumPayments(p, "Term 3");
+    const g = structure[feeGrade] || {};
+    const expected = (Number(g["Term 1"])||0) + (Number(g["Term 2"])||0) + (Number(g["Term 3"])||0);
+    const paid = t1 + t2 + t3;
+    return { t1, t2, t3, expected, paid, balance: expected - paid };
+  }
+
+  const totals = learners.reduce((acc, l) => {
+    const r = rowFor(l);
+    acc.t1 += r.t1; acc.t2 += r.t2; acc.t3 += r.t3; acc.expected += r.expected; acc.paid += r.paid; acc.balance += r.balance;
+    return acc;
+  }, { t1:0, t2:0, t3:0, expected:0, paid:0, balance:0 });
+
+  function exportCSVList() {
+    const rows = [["Adm No","Name","Term 1 Paid","Term 2 Paid","Term 3 Paid","Total Expected","Total Paid","Balance"]];
+    learners.forEach(l => {
+      const r = rowFor(l);
+      rows.push([l.admNo||"", l.name, r.t1, r.t2, r.t3, r.expected, r.paid, r.balance]);
+    });
+    rows.push(["","TOTAL", totals.t1, totals.t2, totals.t3, totals.expected, totals.paid, totals.balance]);
+    downloadCSV(rows, `Fees_${gradeLabel}_${feeStream||"Main"}_${feeYear}.csv`.replace(/\s+/g,"_"));
+  }
+
+  function buildStatementHTML(l) {
+    const p = (payments[l.name]||[]).slice().sort((a,b)=>(a.date||"").localeCompare(b.date||""));
+    const r = rowFor(l);
+    const rows = p.map(x => `<tr><td>${x.date||""}</td><td>${x.term||""}</td><td>${(x.mode||"").toUpperCase()}</td><td>${x.receiptNo||""}</td><td style="text-align:right">${fmtKES(x.amount)}</td></tr>`).join("");
+    return `<!DOCTYPE html><html><head><meta charset="utf-8"/><title>Fee Statement - ${l.name}</title>
+<style>
+  body{font-family:Arial,sans-serif;margin:0;padding:28px;color:#111;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .no-print{display:none!important;}
+  @page{size:A4 portrait;margin:1.2cm;}
+  h1{font-size:18px;margin:0 0 2px;}
+  .sub{color:#555;font-size:12px;margin-bottom:14px;}
+  table{border-collapse:collapse;width:100%;font-size:12px;margin-top:8px;}
+  th,td{border:1px solid #ccc;padding:6px 8px;}
+  th{background:#f3f4f6;text-align:left;}
+  .sum{margin-top:16px;width:320px;margin-left:auto;font-size:13px;}
+  .sum div{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #eee;}
+  .sum .bal{font-weight:800;font-size:15px;border-top:2px solid #111;margin-top:4px;padding-top:8px;}
+  #__printBtnBar{position:sticky;top:0;background:#111;padding:10px;text-align:center;margin:-28px -28px 20px;}
+  #__printBtnBar button{background:#fff;color:#111;border:none;border-radius:6px;padding:8px 18px;font-size:14px;font-weight:700;cursor:pointer;}
+</style></head><body>
+<div id="__printBtnBar" class="no-print"><button onclick="window.print()">🖨 Print This Page</button></div>
+<h1>${(schoolName||"Your School Name").toUpperCase()}</h1>
+<div class="sub">${schoolCounty||""}${schoolCounty?" · ":""}Fee Statement — ${gradeLabel}${feeStream?" "+feeStream:""} · ${feeYear}</div>
+<div><b>Name:</b> ${l.name} &nbsp;&nbsp; <b>Adm No:</b> ${l.admNo||"—"}</div>
+<table><thead><tr><th>Date</th><th>Term</th><th>Mode</th><th>Receipt No.</th><th style="text-align:right">Amount</th></tr></thead>
+<tbody>${rows || `<tr><td colspan="5" style="text-align:center;color:#888">No payments recorded yet</td></tr>`}</tbody></table>
+<div class="sum">
+  <div><span>Total fees expected (year)</span><span>${fmtKES(r.expected)}</span></div>
+  <div><span>Total paid</span><span>${fmtKES(r.paid)}</span></div>
+  <div class="bal"><span>Balance</span><span>${fmtKES(r.balance)}</span></div>
+</div>
+<script>window.onload=function(){setTimeout(function(){window.print();},300);};</script>
+</body></html>`;
+  }
+  function printStatement(l) {
+    const html = buildStatementHTML(l);
+    const w = window.open("", "_blank");
+    if (!w) { alert("Please allow pop-ups to print the fee statement."); return; }
+    w.document.write(html); w.document.close();
+  }
+
+  const bx = { maxWidth: 980, margin: "20px auto", padding: "0 12px", fontFamily: "-apple-system,sans-serif" };
+  const card = { background:"#fff", borderRadius:12, padding:"18px 18px", boxShadow:"0 2px 16px rgba(0,0,0,0.08)", marginBottom:16 };
+  const inp = { padding:"7px 9px", border:"1px solid #ddd", borderRadius:7, fontSize:13, width:100 };
+  const sel = { padding:"7px 9px", border:"1px solid #ddd", borderRadius:7, fontSize:13 };
+  const btn = (bg) => ({ padding:"8px 14px", background:bg, color:"#fff", border:"none", borderRadius:7, fontSize:13, fontWeight:700, cursor:"pointer" });
+  const th = { textAlign:"left", padding:"7px 8px", fontSize:11.5, color:"#555", borderBottom:"2px solid #ddd", whiteSpace:"nowrap" };
+  const td = { padding:"7px 8px", fontSize:13, borderBottom:"1px solid #eee" };
+
+  return (
+    <div style={{ background:"#eef2ff", minHeight:"100vh", paddingBottom:40 }}>
+      <div style={{ background:"linear-gradient(135deg,#0f2027,#203a43)", color:"#fff", padding:"18px 12px", textAlign:"center" }}>
+        <div style={{ fontSize:20, fontWeight:800 }}>💰 Fees — {(schoolName||"Your School Name").toUpperCase()}</div>
+        <div style={{ fontSize:12, color:"#cde", marginTop:2 }}>{gradeLabel}{feeStream?` ${feeStream}`:""} · {feeYear}</div>
+        <div style={{ marginTop:8, display:"flex", gap:8, justifyContent:"center", flexWrap:"wrap" }}>
+          <button onClick={onBack} style={{ fontSize:11, padding:"4px 12px", background:"rgba(255,255,255,0.15)", border:"1px solid rgba(255,255,255,0.4)", borderRadius:20, color:"#fff", cursor:"pointer" }}>🏠 Home</button>
+          <a href="timetable.html" style={{ fontSize:11, padding:"4px 12px", background:"rgba(255,255,255,0.15)", border:"1px solid rgba(255,255,255,0.4)", borderRadius:20, color:"#fff", cursor:"pointer", textDecoration:"none" }}>🗓 Timetable</a>
+        </div>
+      </div>
+
+      <div style={bx}>
+        <div style={card}>
+          <div style={{ display:"flex", gap:14, flexWrap:"wrap", alignItems:"flex-end" }}>
+            <div><label style={{display:"block",fontSize:11,color:"#666",marginBottom:3}}>Grade</label>
+              <select style={sel} value={feeGrade} onChange={e=>{ const g=e.target.value; setFeeGrade(g); setFeeStream((classesConfig[g]||[""])[0]||""); }}>
+                <option value="7">Grade 7</option><option value="8">Grade 8</option><option value="9">Grade 9</option>
+              </select>
+            </div>
+            {streamOpts.length > 1 && <div><label style={{display:"block",fontSize:11,color:"#666",marginBottom:3}}>Class</label>
+              <select style={sel} value={feeStream} onChange={e=>setFeeStream(e.target.value)}>
+                {streamOpts.map(s=><option key={s||"main"} value={s}>{s||"Main"}</option>)}
+              </select>
+            </div>}
+            <div><label style={{display:"block",fontSize:11,color:"#666",marginBottom:3}}>Year</label>
+              <select style={sel} value={feeYear} onChange={e=>setFeeYear(e.target.value)}>
+                {YEARS.map(y=><option key={y}>{y}</option>)}
+              </select>
+            </div>
+            {savedFlash && <div style={{ color:"#16a34a", fontSize:12.5, fontWeight:700 }}>{savedFlash}</div>}
+          </div>
+        </div>
+
+        <div style={card}>
+          <div style={{ fontSize:14, fontWeight:800, marginBottom:10 }}>🧾 Fee Structure — {gradeLabel} · {feeYear}</div>
+          <div style={{ display:"flex", gap:12, flexWrap:"wrap", alignItems:"flex-end" }}>
+            {FEE_TERMS.map(t => (
+              <div key={t}><label style={{display:"block",fontSize:11,color:"#666",marginBottom:3}}>{t} (KES)</label>
+                <input style={inp} type="number" min="0" value={structDraft[t]}
+                  onChange={e=>setStructDraft(d=>({...d,[t]:e.target.value}))} placeholder="0" />
+              </div>
+            ))}
+            <button style={btn("#1a56db")} onClick={saveStructure} disabled={saving}>{saving?"Saving…":"💾 Save Structure"}</button>
+          </div>
+          <div style={{ fontSize:11.5, color:"#888", marginTop:8 }}>Applies to every learner in {gradeLabel} for {feeYear}. Amounts are per term.</div>
+        </div>
+
+        <div style={card}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10, flexWrap:"wrap", gap:8 }}>
+            <div style={{ fontSize:14, fontWeight:800 }}>📋 Class Fee Sheet</div>
+            <button style={btn("#16a34a")} onClick={exportCSVList}>⬇ Export CSV</button>
+          </div>
+          {loading ? <div style={{ padding:20, textAlign:"center", color:"#888" }}>Loading…</div> :
+           learners.length === 0 ? <div style={{ padding:20, textAlign:"center", color:"#888" }}>No learners found in this class yet.</div> :
+          <div style={{ overflowX:"auto" }}>
+            <table style={{ width:"100%", borderCollapse:"collapse" }}>
+              <thead><tr>
+                <th style={th}>Adm No</th><th style={th}>Name</th>
+                <th style={th}>Term 1 Paid</th><th style={th}>Term 2 Paid</th><th style={th}>Term 3 Paid</th>
+                <th style={th}>Expected</th><th style={th}>Paid</th><th style={th}>Balance</th><th style={th}>Actions</th>
+              </tr></thead>
+              <tbody>
+                {learners.map(l => {
+                  const r = rowFor(l);
+                  return (
+                    <tr key={l.name}>
+                      <td style={td}>{l.admNo||"—"}</td>
+                      <td style={td}>{l.name}</td>
+                      <td style={td}>{fmtKES(r.t1)}</td>
+                      <td style={td}>{fmtKES(r.t2)}</td>
+                      <td style={td}>{fmtKES(r.t3)}</td>
+                      <td style={td}>{fmtKES(r.expected)}</td>
+                      <td style={td}>{fmtKES(r.paid)}</td>
+                      <td style={{...td, fontWeight:800, color: r.balance>0 ? "#c0392b" : "#16a34a"}}>{fmtKES(r.balance)}</td>
+                      <td style={{...td, whiteSpace:"nowrap"}}>
+                        <button onClick={()=>setPaymentFor(l)} style={{...btn("#1a56db"), padding:"5px 9px", fontSize:11.5, marginRight:5}}>+ Payment</button>
+                        <button onClick={()=>setHistoryFor(l)} style={{...btn("#555"), padding:"5px 9px", fontSize:11.5, marginRight:5}}>History</button>
+                        <button onClick={()=>printStatement(l)} style={{...btn("#8a6508"), padding:"5px 9px", fontSize:11.5}}>🧾 Statement</button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+              <tfoot>
+                <tr style={{ background:"#f9fafb", fontWeight:800 }}>
+                  <td style={td} colSpan={2}>TOTAL</td>
+                  <td style={td}>{fmtKES(totals.t1)}</td>
+                  <td style={td}>{fmtKES(totals.t2)}</td>
+                  <td style={td}>{fmtKES(totals.t3)}</td>
+                  <td style={td}>{fmtKES(totals.expected)}</td>
+                  <td style={td}>{fmtKES(totals.paid)}</td>
+                  <td style={{...td, color: totals.balance>0 ? "#c0392b" : "#16a34a"}}>{fmtKES(totals.balance)}</td>
+                  <td style={td}></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>}
+        </div>
+      </div>
+
+      {paymentFor && (
+        <PaymentModal learner={paymentFor} onClose={()=>setPaymentFor(null)}
+          onSave={async(payment)=>{ const ok = await addPayment(paymentFor.name, payment); if (ok) setPaymentFor(null); }} />
+      )}
+      {historyFor && (
+        <FeePaymentHistoryModal learner={historyFor} payments={payments[historyFor.name]||[]}
+          onDelete={(id)=>deletePayment(historyFor.name, id)} onClose={()=>setHistoryFor(null)} />
+      )}
+    </div>
+  );
+}
+
+function PaymentModal({ learner, onClose, onSave }) {
+  const [term, setTerm]   = useState(FEE_TERMS[0]);
+  const [date, setDate]   = useState(()=>new Date().toISOString().slice(0,10));
+  const [amount, setAmount] = useState("");
+  const [mode, setMode]   = useState("Cash");
+  const [receiptNo, setReceiptNo] = useState("");
+  const [note, setNote]   = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const overlay = { position:"fixed", inset:0, background:"rgba(0,0,0,0.5)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:1000, padding:16 };
+  const box = { background:"#fff", borderRadius:12, padding:22, width:"100%", maxWidth:380, fontFamily:"-apple-system,sans-serif" };
+  const field = { marginBottom:12 };
+  const label = { display:"block", fontSize:12, color:"#555", marginBottom:4, fontWeight:600 };
+  const input = { width:"100%", padding:"8px 10px", border:"1px solid #ddd", borderRadius:8, fontSize:14, boxSizing:"border-box" };
+  const btn = (bg) => ({ padding:"9px 16px", background:bg, color:"#fff", border:"none", borderRadius:8, fontSize:13.5, fontWeight:700, cursor:"pointer" });
+
+  async function save() {
+    const amt = Number(amount);
+    if (!amt || amt <= 0) { alert("Enter a valid amount."); return; }
+    setSaving(true);
+    try {
+      await onSave({ id: Date.now().toString(36)+Math.random().toString(36).slice(2,6), term, date, amount: amt, mode, receiptNo: receiptNo.trim(), note: note.trim() });
+    } finally { setSaving(false); }
+  }
+
+  return (
+    <div style={overlay}>
+      <div style={box}>
+        <div style={{ fontSize:16, fontWeight:800, marginBottom:14 }}>+ Record Payment — {learner.name}</div>
+        <div style={field}><label style={label}>Term</label>
+          <select style={input} value={term} onChange={e=>setTerm(e.target.value)}>
+            {FEE_TERMS.map(t=><option key={t}>{t}</option>)}
+          </select>
+        </div>
+        <div style={field}><label style={label}>Date</label>
+          <input style={input} type="date" value={date} onChange={e=>setDate(e.target.value)} />
+        </div>
+        <div style={field}><label style={label}>Amount (KES)</label>
+          <input style={input} type="number" min="0" value={amount} onChange={e=>setAmount(e.target.value)} placeholder="e.g. 5000" autoFocus />
+        </div>
+        <div style={field}><label style={label}>Payment Mode</label>
+          <select style={input} value={mode} onChange={e=>setMode(e.target.value)}>
+            <option>Cash</option><option>M-Pesa</option><option>Bank</option><option>Cheque</option><option>Other</option>
+          </select>
+        </div>
+        <div style={field}><label style={label}>Receipt No. (optional)</label>
+          <input style={input} value={receiptNo} onChange={e=>setReceiptNo(e.target.value)} />
+        </div>
+        <div style={field}><label style={label}>Note (optional)</label>
+          <input style={input} value={note} onChange={e=>setNote(e.target.value)} />
+        </div>
+        <div style={{ display:"flex", gap:8, marginTop:16 }}>
+          <button style={{...btn("#1a56db"), flex:1}} onClick={save} disabled={saving}>{saving?"Saving…":"💾 Save Payment"}</button>
+          <button style={{...btn("#888"), flex:1}} onClick={onClose}>Cancel</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FeePaymentHistoryModal({ learner, payments, onDelete, onClose }) {
+  const overlay = { position:"fixed", inset:0, background:"rgba(0,0,0,0.5)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:1000, padding:16 };
+  const box = { background:"#fff", borderRadius:12, padding:22, width:"100%", maxWidth:460, maxHeight:"80vh", overflowY:"auto", fontFamily:"-apple-system,sans-serif" };
+  const btn = (bg) => ({ padding:"6px 12px", background:bg, color:"#fff", border:"none", borderRadius:7, fontSize:12, fontWeight:700, cursor:"pointer" });
+  const sorted = (payments||[]).slice().sort((a,b)=>(b.date||"").localeCompare(a.date||""));
+  const total = sumPayments(payments);
+  return (
+    <div style={overlay}>
+      <div style={box}>
+        <div style={{ fontSize:16, fontWeight:800, marginBottom:4 }}>Payment History — {learner.name}</div>
+        <div style={{ fontSize:12.5, color:"#666", marginBottom:14 }}>Total paid: <b>{fmtKES(total)}</b></div>
+        {sorted.length === 0 ? <div style={{ color:"#888", fontSize:13 }}>No payments recorded yet.</div> :
+          sorted.map(p => (
+            <div key={p.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"9px 0", borderBottom:"1px solid #eee" }}>
+              <div>
+                <div style={{ fontWeight:700, fontSize:13.5 }}>{fmtKES(p.amount)} <span style={{fontWeight:400,color:"#888",fontSize:11.5}}>· {p.term}</span></div>
+                <div style={{ fontSize:11.5, color:"#888" }}>{p.date} · {p.mode}{p.receiptNo?` · Receipt ${p.receiptNo}`:""}{p.note?` · ${p.note}`:""}</div>
+              </div>
+              <button style={btn("#c0392b")} onClick={()=>onDelete(p.id)}>✕</button>
+            </div>
+          ))
+        }
+        <button style={{...btn("#888"), width:"100%", marginTop:16, padding:"9px"}} onClick={onClose}>Close</button>
+      </div>
+    </div>
+  );
+}
+
 function App() {
   const [userSession, setUserSession] = useState(() => {
     try { const s = localStorage.getItem("school_user_session"); return s ? JSON.parse(s) : null; } catch { return null; }
@@ -2686,16 +3045,17 @@ function App() {
     if (page!=="results") return;
     let active = true;
     (async()=>{
-      const START_TERM = "Mid Term 2";
-      const START_YEAR = 2026;
       const curY = parseInt(year);
       const TL = termsFor(grade);
       const curIdx = TL.indexOf(term);
-      const startIdx = TL.indexOf(START_TERM);
+      // Start from the first exam sitting of the selected year, through the current term —
+      // this is the full, correct span for "this grade, this year" since a learner's records
+      // from an earlier grade (before promotion) live under a different grade key anyway.
+      const startIdx = 0;
 
-      // Build chronological list of all term/year combos from MT2 2026 to current (inclusive)
+      // Build chronological list of all term/year combos from the start of the year to current (inclusive)
       const allTermYears = [];
-      let y = START_YEAR;
+      let y = curY;
       let tidx = startIdx;
       while (y < curY || (y === curY && tidx <= curIdx)) {
         const shortYear = y !== curY ? ` '${String(y).slice(2)}` : "";
@@ -2730,10 +3090,12 @@ function App() {
           });
         } else {
           let allData = [];
-          if (isSplitGrade(grade)) {
-            const e = (await loadShared(storageKey(grade,"East",t,ry), [])) || [];
-            const w = (await loadShared(storageKey(grade,"West",t,ry), [])) || [];
-            allData = [...e, ...w];
+          const streamsForHist = classesConfig[grade] || [""];
+          if (streamsForHist.length > 1) {
+            const perStream = await Promise.all(
+              streamsForHist.map(s => loadShared(storageKey(grade, s, t, ry), []))
+            );
+            allData = perStream.flat().filter(Boolean);
           } else {
             allData = (await loadShared(storageKey(grade,"",t,ry), [])) || [];
           }
@@ -3289,6 +3651,12 @@ ${autoPrint ? "<scr"+"ipt>window.onload=function(){setTimeout(function(){window.
           {userSession.role === "admin" && <button onClick={()=>setShowWizard(true)} style={{fontSize:11,padding:"4px 12px",background:"rgba(255,255,255,0.15)",border:"1px solid rgba(255,255,255,0.4)",borderRadius:20,color:"#fff",cursor:"pointer"}}>
             🔄 Re-run Year Setup
           </button>}
+          {userSession.role === "admin" && <button onClick={()=>setPage("fees")} style={{fontSize:11,padding:"4px 12px",background:"rgba(255,255,255,0.15)",border:"1px solid rgba(255,255,255,0.4)",borderRadius:20,color:"#fff",cursor:"pointer"}}>
+            💰 Fees
+          </button>}
+          {userSession.role === "admin" && <a href="timetable.html" style={{fontSize:11,padding:"4px 12px",background:"rgba(255,255,255,0.15)",border:"1px solid rgba(255,255,255,0.4)",borderRadius:20,color:"#fff",cursor:"pointer",textDecoration:"none",display:"inline-block"}}>
+            🗓 Timetable
+          </a>}
         </div>
       </div>
       <div style={S.homeCard}>
@@ -3368,6 +3736,21 @@ ${autoPrint ? "<scr"+"ipt>window.onload=function(){setTimeout(function(){window.
       </div>
     </div>
   );}
+
+  if (page === "fees") {
+    if (!isAdmin) { setPage("home"); return null; }
+    return (
+      <FeesPage
+        initialGrade={grade}
+        initialStream={stream}
+        initialYear={year}
+        classesConfig={classesConfig}
+        schoolName={schoolName}
+        schoolCounty={schoolCounty}
+        onBack={()=>setPage("home")}
+      />
+    );
+  }
 
   // ── SUBJECT TEACHER LOGIN ──────────────────────────────────────────────
     // ── SUBJECT TEACHER — PICK CLASS (if they teach more than one) ────────
@@ -3568,6 +3951,11 @@ ${autoPrint ? "<scr"+"ipt>window.onload=function(){setTimeout(function(){window.
             if (dirty && !window.confirm("You have unsaved changes. Leave without saving?")) return;
             setPage("home");
           }}>← Back</button>
+          {isAdmin && <button style={{...S.backBtn, marginLeft:6}} onClick={()=>{
+            if (dirty && !window.confirm("You have unsaved changes. Leave without saving?")) return;
+            setPage("fees");
+          }}>💰 Fees</button>}
+          {isAdmin && <a href="timetable.html" style={{...S.backBtn, marginLeft:6, textDecoration:"none", display:"inline-block"}}>🗓 Timetable</a>}
           <div style={S.topTitle}>{label} · {term} {year}
             <span style={{display:"block",fontWeight:400,fontSize:10,color:"#777"}}>Saved locally on this laptop/browser only — not shared with anyone else</span>
             {dirty && <span style={{display:"inline-block",marginTop:3,background:"#b94a2c",color:"#fff",fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:10}}>● Unsaved changes</span>}
